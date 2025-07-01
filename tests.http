@@ -1,5 +1,5 @@
-@apimName = your-apim-instance-name
-@apiPath = your-api-path
+@apimName = csaistoznvg3iu6nbs
+@apiPath = Chickens
 
 ### Test APIM endpoint
 GET https://{{apimName}}.azure-api.net/{{apiPath}}
