@@ -1,0 +1,182 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Chicken API",
+        "version": "1.0.0",
+        "description": "API for managing chickens and their eggs"
+    },
+    "paths": {
+        "/chickens": {
+            "get": {
+                "summary": "List all chickens",
+                "responses": {
+                    "200": {
+                        "description": "A list of chickens",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChickenList"
+                                },
+                                "examples": {
+                                    "example1": {
+                                        "value": [
+                                            {
+                                                "id": "1",
+                                                "name": "Cluck Norris",
+                                                "breed": "Silkie",
+                                                "age": 12
+                                            },
+                                            {
+                                                "id": "2",
+                                                "name": "Hen Solo",
+                                                "breed": "Leghorn",
+                                                "age": 8
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Add a new chicken",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Chicken"
+                            },
+                            "example": {
+                                "id": "3",
+                                "name": "Egg Sheeran",
+                                "breed": "Rhode Island Red",
+                                "age": 6
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Chicken created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chicken"
+                                },
+                                "example": {
+                                    "id": "3",
+                                    "name": "Egg Sheeran",
+                                    "breed": "Rhode Island Red",
+                                    "age": 6
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chickens/{id}": {
+            "get": {
+                "summary": "Get a chicken by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "description": "ID of the chicken to retrieve",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single chicken",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Chicken"
+                                },
+                                "example": {
+                                    "id": "1",
+                                    "name": "Cluck Norris",
+                                    "breed": "Silkie",
+                                    "age": 12
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Chicken not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Chicken": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for the chicken",
+                        "example": "1"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the chicken",
+                        "example": "Cluck Norris"
+                    },
+                    "breed": {
+                        "type": "string",
+                        "description": "Breed of the chicken",
+                        "example": "Silkie"
+                    },
+                    "age": {
+                        "type": "integer",
+                        "description": "Age of the chicken in months",
+                        "example": 12
+                    }
+                },
+                "required": ["id", "name", "breed", "age"],
+                "example": {
+                    "id": "1",
+                    "name": "Cluck Norris",
+                    "breed": "Silkie",
+                    "age": 12
+                }
+            },
+            "ChickenList": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/Chicken"
+                },
+                "example": [
+                    {
+                        "id": "1",
+                        "name": "Cluck Norris",
+                        "breed": "Silkie",
+                        "age": 12
+                    },
+                    {
+                        "id": "2",
+                        "name": "Hen Solo",
+                        "breed": "Leghorn",
+                        "age": 8
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "chickens",
+            "description": "Operations related to chickens"
+        }
+    ]
+}
