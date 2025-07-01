@@ -8,3 +8,5 @@ GET https://{{apimName}}.azure-api.net/{{apiPath}}
 # @apimName = mycompany-apim
 # @apiPath = api/v1/chat
 # GET https://{{apimName}}.azure-api.net/{{apiPath}}
+
+# test comment
