@@ -83,7 +83,7 @@ jobs:
             fi
             
             echo "Querying Application Insights in resource group: ${{ env.resourceGroup }}"
-            appInsightsName=$(az monitor app-insights component show -g '${{ env.resourceGroup }}' --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}' --query "[0].appId" -o tsv)
+            appInsightsName=$(az monitor app-insights component show -g '${{ env.resourceGroup }}' --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}' --query "[0].name" -o tsv)
             
             if [ -z "$appInsightsName" ] || [ "$appInsightsName" = "null" ] || [ "$appInsightsName" = "None" ]; then
               echo "Error: No Application Insights instance found in resource group ${{ env.resourceGroup }}"

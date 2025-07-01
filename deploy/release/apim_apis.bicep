@@ -8,7 +8,8 @@ resource apiManagement 'Microsoft.ApiManagement/service@2020-12-01' existing = {
 }
 
 resource apiManagementLogger 'Microsoft.ApiManagement/service/loggers@2020-12-01' existing = {
-  name: '${apimName}/${appInsightsName}'
+  name: appInsightsName
+  parent: apiManagement
 }
 
 resource apimApiCopilot 'Microsoft.ApiManagement/service/apis@2020-12-01' = {
