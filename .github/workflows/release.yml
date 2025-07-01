@@ -32,8 +32,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Only run if workflow_run was successful or if manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # LOGIN TO AZURE. THE LOGGED IN SESSION IS ACTIVE TILL A LOGOUT ACTION IS CALLED (OR THE JOB FINISHED)
       - uses: azure/login@v1
@@ -49,26 +51,45 @@ jobs:
             Set-AzContext -Subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}'
           azPSVersion: "latest"
 
-      - name: 'Retrieve API Management Instance & Application Insights Name'
-        uses: azure/powershell@v1
+      - name: 'Retrieve API Management Instance & Application Insights Name and Deploy'
+        uses: azure/CLI@v1
         with:
           inlineScript: |
-            $apim = Get-AzApiManagement -ResourceGroupName '${{ env.resourceGroup }}' | Select-Object -Property Name
-            $appInsights = Get-AzApplicationInsights -ResourceGroupName '${{ env.resourceGroup }}' | Select-Object -Property Name
-            $apimName = $apim.Name
-            $appInsightsName = $appInsights.Name
-            echo "APIM_NAME=$apimName" >> $Env:GITHUB_ENV
-            echo "APPINSIGHTS_NAME=$appInsightsName" >> $Env:GITHUB_ENV
-          azPSVersion: "latest"
-
-      - name: 'Release API definition to API Management'
-        uses: azure/powershell@v1
-        with:
-          inlineScript: |
-            New-AzResourceGroupDeployment -Name '${{ env.deploymentNameAPIMRelease }}' -ResourceGroupName '${{ env.resourceGroup }}' -apimName '${{ env.APIM_NAME }}' -appInsightsName '${{ env.APPINSIGHTS_NAME }}' -TemplateFile '${{ env.releaseAPIMBicepPath }}'
-          azPSVersion: "latest"
+            echo "Checking if resource group exists..."
+            if ! az group show --name '${{ env.resourceGroup }}' --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}' > /dev/null 2>&1; then
+              echo "Error: Resource group '${{ env.resourceGroup }}' not found"
+              exit 1
+            fi
+            
+            echo "Querying API Management instances in resource group: ${{ env.resourceGroup }}"
+            apimName=$(az apim list --resource-group '${{ env.resourceGroup }}' --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}' --query "[0].name" -o tsv)
+            
+            if [ -z "$apimName" ] || [ "$apimName" = "null" ]; then
+              echo "Error: No API Management instance found in resource group ${{ env.resourceGroup }}"
+              exit 1
+            fi
+            
+            echo "Querying Application Insights in resource group: ${{ env.resourceGroup }}"
+            appInsightsName=$(az monitor app-insights component show -g '${{ env.resourceGroup }}' --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}' --query "[0].appId" -o tsv)
+            
+            if [ -z "$appInsightsName" ] || [ "$appInsightsName" = "null" ]; then
+              echo "Error: No Application Insights instance found in resource group ${{ env.resourceGroup }}"
+              exit 1
+            fi
+            
+            echo "API Management Instance: $apimName"
+            echo "Application Insights: $appInsightsName"
+            
+            echo "Deploying API definition to API Management..."
+            az deployment group create \
+              --name '${{ env.deploymentNameAPIMRelease }}' \
+              --resource-group '${{ env.resourceGroup }}' \
+              --template-file '${{ env.releaseAPIMBicepPath }}' \
+              --parameters apimName="$apimName" appInsightsName="$appInsightsName" \
+              --subscription '${{ secrets.AZURE_SUBSCRIPTION_ID }}'
 
       # LOGOUT
       - name: logout
         run: |
           az logout
+        if: always()
