@@ -2,17 +2,17 @@
 name: Build
 
 env:
-  # deploymentNameBuild: ${{ github.event.inputs.deploymentNameBuild }}
-  # location: ${{ github.event.inputs.location }}
   buildBicepPath: './deploy/build/main.bicep'
   deploymentNameBuild: '${{ secrets.PREFIX }}build'
+  location: 'westeurope'  # Set default location
   
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # DISABLED - Uncomment to re-enable
+  #push:
+  #  branches: [ main ]
+  #pull_request:
+  #  branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -43,10 +43,20 @@ jobs:
         uses: azure/powershell@v1
         with:
           inlineScript: |
-            New-AzSubscriptionDeployment -name '${{ env.deploymentNameBuild }}' -namePrefix '${{ secrets.PREFIX }}' -location '${{ secrets.LOCATION }}' -TemplateFile '${{ env.buildBicepPath }}'
+            Write-Host "Starting infrastructure deployment..."
+            $result = New-AzSubscriptionDeployment -name '${{ env.deploymentNameBuild }}' -namePrefix '${{ secrets.PREFIX }}' -location '${{ env.location }}' -TemplateFile '${{ env.buildBicepPath }}'
+            
+            if ($result.ProvisioningState -eq "Succeeded") {
+              Write-Host "Infrastructure deployment completed successfully"
+              Write-Host "Resource Group: ${{ secrets.PREFIX }}-rg created"
+            } else {
+              Write-Error "Infrastructure deployment failed with state: $($result.ProvisioningState)"
+              exit 1
+            }
           azPSVersion: "latest"
 
       # LOGOUT
       - name: logout
         run: |
           az logout
+        if: always()
