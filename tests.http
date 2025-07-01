@@ -1,5 +1,10 @@
-@apimName = <api_management_name>
-@apiPath = <api_path>
+@apimName = your-apim-instance-name
+@apiPath = your-api-path
 
 ### Test APIM endpoint
 GET https://{{apimName}}.azure-api.net/{{apiPath}}
+
+### Example with specific values
+# @apimName = mycompany-apim
+# @apiPath = api/v1/chat
+# GET https://{{apimName}}.azure-api.net/{{apiPath}}
